@@ -10,3 +10,6 @@ ExecStart=/usr/local/sbin/horizon-install
 RemainAfterExit=yes
 StandardOutput=tty
 StandardError=tty
+
+[Install]
+WantedBy=default.target

@@ -12,8 +12,8 @@ fi
 DT=$(date +%s)
 STAMP=$(echo $(date -d @${DT} +%F_%T) | awk -F ':' '{print $1""$2}')
 
-IMAGE="2017-03-02-raspbian-jessie-lite.img"
-URL="https://downloads.raspberrypi.org/raspbian_lite/images/raspbian_lite-2017-03-03/$(basename "$IMAGE" .img).zip"
+IMAGE="2017-04-10-raspbian-jessie-lite.img"
+URL="https://downloads.raspberrypi.org/raspbian_lite/images/raspbian_lite-2017-04-10/$(basename "$IMAGE" .img).zip"
 
 WORK_DIR=$2
 
@@ -96,7 +96,7 @@ finish() {
 
     echo "$WORK, $LOOP_ROOT_PARTITION"
 
-    mkfs.ext4 -F -i 12288 -I 512 -b 1024 -O dir_index,sparse_super,extents -L horizon-root /dev/mapper/"$LOOP_ROOT_PARTITION"
+    mkfs.ext4 -F -i 12288 -I 512 -b 1024 -O dir_index,sparse_super,extents -L horizon-ROOT /dev/mapper/"$LOOP_ROOT_PARTITION"
     mount -o loop /dev/mapper/"$LOOP_ROOT_PARTITION" "$MOUNT"
     tar -xpf $WORK/root_smaller.tar -C $MOUNT
     umount "$MOUNT"
@@ -106,6 +106,9 @@ finish() {
 
     sync
   fi
+
+  # ensure boot partition has label
+  fatlabel /dev/mapper/$LOOP_BOOT_PARTITION "BOOT"
 
   END_ROOT_B=$(parted -s $LOOP_DEV unit b print | grep -Po '2\s+\d+B\s+\K(\d+)')
 
@@ -140,6 +143,9 @@ finish() {
 
 trap finish INT TERM EXIT
 
+# grow image by 500MB for installation
+dd if=/dev/zero bs=1M count=512 >> "$TMPOUTIMG"
+
 LOOP_DEV="$( loopdev )"
 TRIES=0
 until [ "$LOOP_DEV" != "" ]; do
@@ -156,6 +162,15 @@ done
 
 LOOP_BOOT_PARTITION="$( looppart $LOOP_DEV p1 )"
 LOOP_ROOT_PARTITION="$( looppart $LOOP_DEV p2 )"
+
+# grow root partition and fs
+parted -s /dev/mapper/"$LOOP_ROOT_PARTITION" rm 2
+parted -s /dev/mapper/"$LOOP_ROOT_PARTITION" mkpart primary ext4 0% 100%
+
+kpartx -u "$TMPOUTIMG"
+
+e2fsck -fy /dev/mapper/"$LOOP_ROOT_PARTITION"
+resize2fs /dev/mapper/"$LOOP_ROOT_PARTITION"
 
 EX=$(mount | grep -q "$MOUNT" || :)
 if [ "$EX" == "" ]; then
@@ -200,3 +215,10 @@ echo "$STAMP" > "$MOUNT"/var/horizon/image_version
 rm -Rf "$MOUNT_BOOT"/*
 cp -vrLp "$MOUNT"/boot/* "$MOUNT_BOOT"/
 rm -Rf "$MOUNT"/boot/*
+
+# write our fstab which uses labels
+cat <<EOF > "$MOUNT"/etc/fstab
+proc                /proc           proc            defaults            0 0
+/dev/mmcblk0p1      /boot           vfat            defaults            0 2
+/dev/mmcblk0p2      /               ext4            defaults,noatime    0 1
+EOF

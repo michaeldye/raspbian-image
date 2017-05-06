@@ -2,14 +2,22 @@
 
 for i in /sys/devices/system/cpu/cpu[0-9]*/cpufreq/scaling_governor; do echo "ondemand" > $i; done
 
-mkdir -p /opt/hzn_common
+bootfs_override() {
+  local p=$1
 
-if [ -d /boot/horizon/config ]; then
-  cp -af /boot/horizon/config /opt/hzn_common/
-fi
+  if [ -e "/boot/horizon-cfg${p}" ]; then
+    if [ "$(md5sum "/boot/horizon-cfg${p}")" != "$(md5sum "${p}")" ]; then
+      systemd-cat -t horizon-configure echo -e "/boot/horizon-cfg${p} exists, copying to $p"
 
-# stuff from /var may overwrite the boot stuff
-if [ -d /var/horizon/config ]; then
-  cp -af /var/horizon/config /opt/hzn_common/
-fi
+      if [ -e "${p}" ]; then
+        mv "${p}" "${p}.overridden"
+      fi
 
+      cp -v /boot/horizon-cfg"${p}" "${p}"
+    fi
+  fi
+}
+
+bootfs_override "/etc/default/horizon-env"
+bootfs_override "/etc/horizon/anax.json"
+bootfs_override "/usr/horizon/bin/horizon-env-preprocess"

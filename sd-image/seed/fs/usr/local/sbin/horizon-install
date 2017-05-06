@@ -2,17 +2,12 @@
 
 loud() {
   local msg="++ Horizon firstboot: $1"
-  if [ -e "/dev/ttyAMA0" ]; then
-    echo -e "$msg" > /dev/ttyAMA0
-  elif [ -e "/dev/ttyS0" ]; then
-    echo -e "$msg" > /dev/ttyS0
-  fi
   echo -e "$msg" > /dev/tty1
-  echo -e "$msg" | logger -t horizon-configure
+  systemd-cat -t horizon-install echo -e "$msg"
 }
 
 exists() {
-  [ -d "/opt/hzn" ]
+  dpkg -l bluehorizon > /dev/null 2>&1
   echo $?
 }
 
@@ -32,18 +27,22 @@ if  [ -e /var/horizon/.firstboot ]; then
       sleep 20
 
       if [ $((evalct % 3)) -eq 0 ]; then
-        loud "Ubuntu store unavailable, probably because this device is not connected to a network. Checking back again in a few seconds. This procedure will continue indefinitely; if you'd like to suspend the firstboot setup process, execute 'systemctl stop horizon-configure'. It will be re-executed on reboot."
+        loud "Repository unavailable, probably because this device is not connected to a network. Checking back again in a few seconds. This procedure will continue indefinitely; if you'd like to suspend the firstboot setup process, execute 'systemctl stop horizon-configure'. It will be re-executed on reboot."
       fi
 
       evalct=$((evalct+1))
     done
 
     until [ $(exists bluehorizon) == 0 ]; do
-      mkdir -p /opt/hzn
+      ls /var/cache/apt/archives/*horizon*.deb > /dev/null 2>&1
 
-      wget -O /tmp/bluehorizon-bundle.tar.bz2 'https://tor01.objectstorage.softlayer.net/v1/AUTH_bd05f276-e42f-4fa1-b7b3-780e8544769f/bluehorizon-bundle/bluehorizon-2.0.2-bundle-armhf.tar.bz2?temp_url_sig=c25d8a5829574334dda001fef29257ac40ffde8d&temp_url_expires=1522866944'
+      if [ $? == 0 ]; then
+        cd /var/cache/apt/archives/ && dpkg -i horizon*.deb bluehorizon*.deb
+      else
+        loud 'ERROR: Unable to find Horizon .deb packages in /var/cache/apt/archives'
+        # TODO: add installation from the apt repo here instead
+      fi
 
-      tar xjf /tmp/bluehorizon-bundle.tar.bz2 -C /
 
       start=$(date +%s)
       if [ $((start - $(date +%s))) -gt 120 ]; then
@@ -52,35 +51,21 @@ if  [ -e /var/horizon/.firstboot ]; then
       fi
     done
 
-    systemctl daemon-reload && systemctl enable bluehorizon.anax.service && systemctl start bluehorizon.anax.service
+    systemctl daemon-reload && systemctl start horizon.service
 
     loud 'Successfully installed Blue Horizon bundle and started services.'
 	fi
 else
   # firstboot stuff
-
   loud 'Starting firstboot configuration'
-  #ln -s /run/systemd/resolve/resolv.conf /etc/resolv.conf
-
-  #dpkg --configure -a
 
   loud 'Growing root partition'
-  bash -x /usr/local/sbin/resize-root
+  /usr/local/sbin/resize-root
 
   loud 'Generating SSH host keys'
   dpkg-reconfigure openssh-server
 
-  device_id=$(cat /proc/cpuinfo | grep Serial | head -1 | awk '{print $NF}')
-  if [ "$?" != 0 ] || [ "$device_id" == "" ]; then
-    # can't use this for device id, use mac address of interface instead
-    device_id=$(echo $(sha1sum <(ip -o link show $(basename $(ls -d /proc/sys/net/ipv4/conf/[we]* | head -n1)) | grep -oP "link/ether \K([:\b\w]+) ")) | awk '{print $1}')
-    if [ "$?" != 0 ] || [ "$device_id" == "" ]; then
-      # couldn't use the MAC, using a random string
-      device_id=$(< /dev/urandom tr -dc A-Za-z0-9 | head -c${1:-32};echo)
-    fi
-  fi
-
-  NEW_HOSTNAME=horizon-$device_id
+  NEW_HOSTNAME=horizon-$(cat /proc/cpuinfo | grep Serial | head -1 | awk '{print $NF}')
   echo -e "\n127.0.1.1        ${NEW_HOSTNAME}" >> /etc/hosts
   echo "${NEW_HOSTNAME}" > /etc/hostname
 
@@ -92,9 +77,7 @@ else
   echo "0    3 * * *   root    find /var/log/workload -iname "*.gz" -mtime +32 -print0 | xargs -0 rm -f" >> /etc/crontab
   echo "30   3 * * *   root    find /var/log/workload -mtime +2 -size 0 -print0 | xargs -0 rm -f" >> /etc/crontab
 
-  mkdir -p /var/horizon/config
-
-  echo "$device_id" > /var/horizon/config/device_id
+  mkdir -p /var/horizon
   touch /var/horizon/.firstboot
 
   loud 'Firstboot setup procedure complete, rebooting'

@@ -9,3 +9,6 @@ ExecStart=/usr/local/sbin/ip-out-console
 RemainAfterExit=yes
 StandardOutput=tty
 StandardError=tty
+
+[Install]
+WantedBy=default.target

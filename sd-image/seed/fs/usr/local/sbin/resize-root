@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ROOT=/dev/disk/by-label/horizon-root
+ROOT=/dev/disk/by-label/horizon-ROOT
 
 if ! [ -h $ROOT ]; then
   echo "/dev/disk/by-label/root does not exist or is not a symlink. Don't know how to expand"

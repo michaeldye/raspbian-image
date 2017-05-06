@@ -2,9 +2,12 @@
 Description=horizon wpa supplicant configure service
 Requires=sysinit.target
 After=local-fs.target
-Before=network-pre.target
+Before=ifup@wlan0.service
 RequiresMountsFor=/boot
 
 [Service]
 Type=oneshot
 ExecStart=/usr/local/sbin/wpa-supplicant-configure
+
+[Install]
+WantedBy=default.target
