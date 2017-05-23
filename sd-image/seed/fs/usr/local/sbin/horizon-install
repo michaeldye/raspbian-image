@@ -1,9 +1,10 @@
 #!/bin/bash
 
 loud() {
-  local msg="++ Horizon firstboot: $1"
-  echo -e "$msg" > /dev/tty1
-  systemd-cat -t horizon-install echo -e "$msg"
+  local msg="Horizon firstboot: $1"
+  echo -e "$msg" > /dev/console
+  echo -e "$msg"
+  #systemd-cat -t horizon-install echo -e "$msg"
 }
 
 exists() {
@@ -16,54 +17,50 @@ reachable() {
   echo $?
 }
 
-if  [ -e /var/horizon/.firstboot ]; then
-  if [ "$(exists bluehorizon)" != 0 ]; then
-    # do install
-    loud 'Installing Blue Horizon (this may take a few mins)'
+install() {
+  # do install
+  loud 'Installing Blue Horizon (this may take a few mins)'
+
+  start=$(date +%s)
+  evalct=0
+  until [ "$(reachable)" == 0 ]; do
+    sleep 20
+
+    if [ $((evalct % 3)) -eq 0 ]; then
+      loud "Repository unavailable, probably because this device is not connected to a network. Checking back again in a few seconds. This procedure will continue indefinitely; if you'd like to suspend the firstboot setup process, execute 'systemctl stop horizon-configure'. It will be re-executed on reboot."
+    fi
+
+    evalct=$((evalct+1))
+  done
+
+  until [ $(exists bluehorizon) == 0 ]; do
+    ls /var/cache/apt/archives/*horizon*.deb > /dev/null 2>&1
+
+    if [ $? == 0 ]; then
+      cd /var/cache/apt/archives/ && dpkg -i horizon*.deb bluehorizon*.deb
+    else
+      loud 'ERROR: Unable to find Horizon .deb packages in /var/cache/apt/archives'
+      # TODO: add installation from the apt repo here instead
+    fi
+
 
     start=$(date +%s)
-    evalct=0
-    until [ "$(reachable)" == 0 ]; do
-      sleep 20
+    if [ $((start - $(date +%s))) -gt 120 ]; then
+      loud 'ERROR: Unable to install Blue Horizon bundle.'
+      continue 2
+    fi
+  done
 
-      if [ $((evalct % 3)) -eq 0 ]; then
-        loud "Repository unavailable, probably because this device is not connected to a network. Checking back again in a few seconds. This procedure will continue indefinitely; if you'd like to suspend the firstboot setup process, execute 'systemctl stop horizon-configure'. It will be re-executed on reboot."
-      fi
+  systemctl daemon-reload && systemctl start horizon.service
 
-      evalct=$((evalct+1))
-    done
+  loud 'Successfully installed Blue Horizon bundle and started services.'
+}
 
-    until [ $(exists bluehorizon) == 0 ]; do
-      ls /var/cache/apt/archives/*horizon*.deb > /dev/null 2>&1
-
-      if [ $? == 0 ]; then
-        cd /var/cache/apt/archives/ && dpkg -i horizon*.deb bluehorizon*.deb
-      else
-        loud 'ERROR: Unable to find Horizon .deb packages in /var/cache/apt/archives'
-        # TODO: add installation from the apt repo here instead
-      fi
-
-
-      start=$(date +%s)
-      if [ $((start - $(date +%s))) -gt 120 ]; then
-        loud 'ERROR: Unable to install Blue Horizon bundle.'
-        continue 2
-      fi
-    done
-
-    systemctl daemon-reload && systemctl start horizon.service
-
-    loud 'Successfully installed Blue Horizon bundle and started services.'
-	fi
-else
-  # firstboot stuff
+firstboot() {
   loud 'Starting firstboot configuration'
 
   loud 'Growing root partition'
   /usr/local/sbin/resize-root
-
-  loud 'Generating SSH host keys'
-  dpkg-reconfigure openssh-server
 
   NEW_HOSTNAME=horizon-$(cat /proc/cpuinfo | grep Serial | head -1 | awk '{print $NF}')
   echo -e "\n127.0.1.1        ${NEW_HOSTNAME}" >> /etc/hosts
@@ -77,9 +74,23 @@ else
   echo "0    3 * * *   root    find /var/log/workload -iname "*.gz" -mtime +32 -print0 | xargs -0 rm -f" >> /etc/crontab
   echo "30   3 * * *   root    find /var/log/workload -mtime +2 -size 0 -print0 | xargs -0 rm -f" >> /etc/crontab
 
-  mkdir -p /var/horizon
-  touch /var/horizon/.firstboot
+}
 
-  loud 'Firstboot setup procedure complete, rebooting'
-  systemctl reboot
-fi
+main() {
+  if  [ -e /var/horizon/.firstboot ]; then
+    if [ "$(exists bluehorizon)" != 0 ]; then
+      install
+    fi
+  else
+    firstboot
+
+    # do this stuff even if firstboot operations failed b/c there is risk of getting caught in a boot loop
+    mkdir -p /var/horizon
+    touch /var/horizon/.firstboot
+
+    loud 'Firstboot setup procedure complete, rebooting'
+    systemctl reboot
+  fi
+}
+
+main | systemd-cat -t horizon-install

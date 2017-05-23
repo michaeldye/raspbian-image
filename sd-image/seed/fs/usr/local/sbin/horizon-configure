@@ -5,16 +5,20 @@ for i in /sys/devices/system/cpu/cpu[0-9]*/cpufreq/scaling_governor; do echo "on
 bootfs_override() {
   local p=$1
 
-  if [ -e "/boot/horizon-cfg${p}" ]; then
-    if [ "$(md5sum "/boot/horizon-cfg${p}")" != "$(md5sum "${p}")" ]; then
-      systemd-cat -t horizon-configure echo -e "/boot/horizon-cfg${p} exists, copying to $p"
+  if [[ -e "/boot/horizon-cfg${p}" ]]; then
+    if ! [[ -e "${p}" ]]; then
+      mkdir -p $(dirname $p)
+    else
 
-      if [ -e "${p}" ]; then
-        mv "${p}" "${p}.overridden"
+      if [[ "$(md5sum "/boot/horizon-cfg${p}")" == "$(md5sum "${p}")" ]]; then
+        return
       fi
 
-      cp -v /boot/horizon-cfg"${p}" "${p}"
+      mv "${p}" "${p}.overridden"
     fi
+
+    systemd-cat -t horizon-configure echo -e "/boot/horizon-cfg${p} exists, copying to $p"
+    cp -v /boot/horizon-cfg"${p}" "${p}"
   fi
 }
 
