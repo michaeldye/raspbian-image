@@ -2,6 +2,15 @@
 
 for i in /sys/devices/system/cpu/cpu[0-9]*/cpufreq/scaling_governor; do echo "ondemand" > $i; done
 
+sum() {
+  SUM=$(md5sum $1 | cut -f1 -d' ')
+  if [ $? != 0 ]; then
+    echo -1
+  else
+    echo $SUM
+  fi
+}
+
 bootfs_override() {
   local p=$1
 
@@ -10,14 +19,14 @@ bootfs_override() {
       mkdir -p $(dirname $p)
     else
 
-      if [[ "$(md5sum "/boot/horizon-cfg${p}")" == "$(md5sum "${p}")" ]]; then
+      if [[ "$(sum "/boot/horizon-cfg${p}")" == "$(sum "${p}")" ]]; then
         return
       fi
 
       mv "${p}" "${p}.overridden"
     fi
 
-    systemd-cat -t horizon-configure echo -e "/boot/horizon-cfg${p} exists, copying to $p"
+    systemd-cat -t horizon-configure echo -e "/boot/horizon-cfg${p} exists, copying to ${p}"
     cp -v /boot/horizon-cfg"${p}" "${p}"
   fi
 }

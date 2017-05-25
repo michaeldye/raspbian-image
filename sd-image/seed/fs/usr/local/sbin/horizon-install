@@ -33,16 +33,18 @@ install() {
     evalct=$((evalct+1))
   done
 
+
+  EXIT=0
   until [ $(exists bluehorizon) == 0 ]; do
     ls /var/cache/apt/archives/*horizon*.deb > /dev/null 2>&1
 
     if [ $? == 0 ]; then
-      cd /var/cache/apt/archives/ && dpkg -i horizon*.deb bluehorizon*.deb
+      cd /var/cache/apt/archives/ && dpkg -i --force-confold horizon*.deb bluehorizon*.deb
+      EXIT=$?
     else
       loud 'ERROR: Unable to find Horizon .deb packages in /var/cache/apt/archives'
       # TODO: add installation from the apt repo here instead
     fi
-
 
     start=$(date +%s)
     if [ $((start - $(date +%s))) -gt 120 ]; then
@@ -51,9 +53,14 @@ install() {
     fi
   done
 
-  systemctl daemon-reload && systemctl start horizon.service
+  systemctl daemon-reload && systemctl enable horizon.service && systemctl start horizon.service
+  EXIT=$?
 
-  loud 'Successfully installed Blue Horizon bundle and started services.'
+  if [ $EXIT == 0 ]; then
+    loud 'Successfully installed Blue Horizon bundle and started services.'
+  else
+    loud 'Failure to install Blue Horizon bundle. Please check system logs for more information.'
+  fi
 }
 
 firstboot() {

@@ -62,7 +62,7 @@ sed "/127.0.1.1/d" -i /etc/hosts
 
 wget http://1dd40.http.tor01.cdn.softlayer.net/fauxcon/fauxcon-armhf-0.1.0 -O /usr/bin/fauxcon && chmod +x /usr/bin/fauxcon
 
-wget http://1dd40.http.tor01.cdn.softlayer.net/ip-out/ip-out-armv7l-0.1.0 -O /usr/local/bin/ip-out && chmod +x /usr/local/bin/ip-out
+wget http://1dd40.http.tor01.cdn.softlayer.net/ip-out/ip-out-armv7l-0.2.0 -O /usr/local/bin/ip-out && chmod +x /usr/local/bin/ip-out
 
 # install docker
 curl https://get.docker.com/ | bash
