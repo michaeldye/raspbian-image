@@ -14,8 +14,9 @@ hash() {
 
 # always generate a new wpa_supplicant.conf from $BOOT_WPA_CREDS if exists
 if [ -e $BOOT_WPA_CREDS ]; then
-  wpa_ssid=$(grep -oP '^wpa_ssid=\K(.*)' $BOOT_WPA_CREDS)
-  wpa_passphrase=$(grep -oP '^wpa_passphrase=\K(.*)' $BOOT_WPA_CREDS)
+  # make sure to not match windows line endings when capturing value
+  wpa_ssid=$(grep -oP '^wpa_ssid=\K([^]+)' $BOOT_WPA_CREDS)
+  wpa_passphrase=$(grep -oP '^wpa_passphrase=\K([^]+)' $BOOT_WPA_CREDS)
 
   if [ "$wpa_ssid" != "" ] && [ "$wpa_passphrase" != "" ]; then
     wpa_passphrase "$wpa_ssid" "$wpa_passphrase" > /tmp/wpa_supplicant.conf-tmp

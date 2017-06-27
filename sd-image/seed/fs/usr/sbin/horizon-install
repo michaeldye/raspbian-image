@@ -67,7 +67,7 @@ firstboot() {
   loud 'Starting firstboot configuration'
 
   loud 'Growing root partition'
-  /usr/local/sbin/resize-root
+  /usr/sbin/resize-root
 
   NEW_HOSTNAME=horizon-$(cat /proc/cpuinfo | grep Serial | head -1 | awk '{print $NF}')
   echo -e "\n127.0.1.1        ${NEW_HOSTNAME}" >> /etc/hosts

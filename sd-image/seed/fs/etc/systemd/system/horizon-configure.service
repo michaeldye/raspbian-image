@@ -6,7 +6,7 @@ RequiresMountsFor=/boot
 
 [Service]
 Type=oneshot
-ExecStart=/usr/local/sbin/horizon-configure
+ExecStart=/usr/sbin/horizon-configure
 
 [Install]
 WantedBy=local-fs.target

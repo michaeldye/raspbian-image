@@ -15,6 +15,10 @@ bootfs_override() {
   local p=$1
 
   if [[ -e "/boot/horizon-cfg${p}" ]]; then
+    # convert windows line endings before doing anything else
+    tr -d '\15\32' < /boot/horizon-cfg${p} > /boot/horizon-cfg${p}.tmp
+    mv /boot/horizon-cfg${p}.tmp /boot/horizon-cfg${p}
+
     if ! [[ -e "${p}" ]]; then
       mkdir -p $(dirname $p)
     else
@@ -31,6 +35,6 @@ bootfs_override() {
   fi
 }
 
-bootfs_override "/etc/default/horizon-env"
+bootfs_override "/etc/default/horizon"
 bootfs_override "/etc/horizon/anax.json"
-bootfs_override "/usr/horizon/bin/horizon-env-preprocess"
+bootfs_override "/usr/horizon/sbin/horizon-env-preprocess"

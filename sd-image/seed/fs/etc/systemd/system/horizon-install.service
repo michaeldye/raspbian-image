@@ -6,7 +6,7 @@ After=network-online.target
 
 [Service]
 Type=oneshot
-ExecStart=/usr/local/sbin/horizon-install
+ExecStart=/usr/sbin/horizon-install
 RemainAfterExit=yes
 StandardOutput=tty
 StandardError=tty

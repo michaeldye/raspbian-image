@@ -5,7 +5,7 @@ After=network-online.target getty.target
 
 [Service]
 Type=oneshot
-ExecStart=/usr/local/sbin/ip-out-console
+ExecStart=/usr/sbin/ip-out-console
 RemainAfterExit=yes
 StandardOutput=tty
 StandardError=tty

@@ -7,7 +7,7 @@ RequiresMountsFor=/boot
 
 [Service]
 Type=oneshot
-ExecStart=/usr/local/sbin/wpa-supplicant-configure
+ExecStart=/usr/sbin/wpa-supplicant-configure
 
 [Install]
 WantedBy=default.target

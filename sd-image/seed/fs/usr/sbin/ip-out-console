@@ -16,5 +16,5 @@ until [ "$(ips)" != "" ]; do
 done
 
 loud "------- Detected Network Interfaces -------"
-loud "$(ip-out -pp)"
+loud "$(/usr/bin/ip-out -pp)"
 loud "-------------------------------------------"
