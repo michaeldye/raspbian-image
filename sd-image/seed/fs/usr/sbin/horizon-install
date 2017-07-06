@@ -4,7 +4,6 @@ loud() {
   local msg="Horizon firstboot: $1"
   echo -e "$msg" > /dev/console
   echo -e "$msg"
-  #systemd-cat -t horizon-install echo -e "$msg"
 }
 
 exists() {
@@ -13,7 +12,7 @@ exists() {
 }
 
 reachable() {
-  host bluehorizon.network > /dev/null 2>&1
+  host pkg.bluehorizon.network > /dev/null 2>&1
   echo $?
 }
 
@@ -36,14 +35,22 @@ install() {
 
   EXIT=0
   until [ $(exists bluehorizon) == 0 ]; do
+    wget -qO - http://pkg.bluehorizon.network/bluehorizon.network-public.key | sudo apt-key add -
+
     ls /var/cache/apt/archives/*horizon*.deb > /dev/null 2>&1
 
     if [ $? == 0 ]; then
       cd /var/cache/apt/archives/ && dpkg -i --force-confold horizon*.deb bluehorizon*.deb
       EXIT=$?
     else
-      loud 'ERROR: Unable to find Horizon .deb packages in /var/cache/apt/archives'
-      # TODO: add installation from the apt repo here instead
+      cat <<EOF > /etc/apt/sources.list.d/bluehorizon.list
+deb [arch=armhf] http://pkg.bluehorizon.network/linux/raspbian jessie main
+deb-src [arch=armhf] http://pkg.bluehorizon.network/linux/raspbian jessie main
+deb [arch=armhf] http://pkg.bluehorizon.network/linux/raspbian jessie-updates main
+deb-src [arch=armhf] http://pkg.bluehorizon.network/linux/raspbian jessie-updates main
+EOF
+      apt-get update
+      apt-get install -y bluehorizon
     fi
 
     start=$(date +%s)

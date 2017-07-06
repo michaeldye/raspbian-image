@@ -55,7 +55,7 @@ sed -i 's/#kernel.printk = 3 4 1 3/kernel.printk = 3 4 1 3/' /etc/sysctl.conf
 sed -i 's/^PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
 sed -i 's/^PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
 
-apt update && apt install -o Dpkg::Options::="--force-confold" -y htop iftop iotop jq screen bridge-utils rsyslog logrotate crda iw wireless-tools wpasupplicant wireless-regdb curl iptables gettext
+apt update && apt install -o Dpkg::Options::="--force-confold" -y htop iftop iotop jq screen bridge-utils rsyslog logrotate crda iw wireless-tools wpasupplicant wireless-regdb curl iptables gettext software-properties-common python-software-properties
 
 echo "$TMP_HOSTNAME" > /etc/hostname
 sed "/127.0.1.1/d" -i /etc/hosts
