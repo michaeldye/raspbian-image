@@ -7,7 +7,7 @@ This project creates a filesystem image for a Raspberry Pi3 or Pi2 from a recent
 Related Projects:
 
 * `anax` (http://github.com/open-horizon/anax): The client control application in the Horizon system
-* `horizon-pkg` (http://github.com/open-horizon/horizon-pkg): A debian packaging of the complete Horizon client components
+* `horizon-pkg` (http://github.com/open-horizon/horizon-pkg): A system for packaging Horizon system `deb`s for multiple distributions and architectures. It also produces Ubuntu snaps
 
 ## Operations
 
