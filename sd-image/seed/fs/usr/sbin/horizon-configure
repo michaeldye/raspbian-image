@@ -35,6 +35,7 @@ bootfs_override() {
   fi
 }
 
+bootfs_override "/etc/apt/sources.list.d/bluehorizon.list"
 bootfs_override "/etc/default/horizon"
 bootfs_override "/etc/horizon/anax.json"
 bootfs_override "/usr/horizon/sbin/horizon-env-preprocess"

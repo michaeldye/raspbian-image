@@ -43,14 +43,17 @@ install() {
       cd /var/cache/apt/archives/ && dpkg -i --force-confold horizon*.deb bluehorizon*.deb
       EXIT=$?
     else
+      if [[ ! -e "/etc/apt/sources.list.d/bluehorizon.list" ]]; then
+
       cat <<EOF > /etc/apt/sources.list.d/bluehorizon.list
 deb [arch=armhf] http://pkg.bluehorizon.network/linux/raspbian jessie main
 deb-src [arch=armhf] http://pkg.bluehorizon.network/linux/raspbian jessie main
 deb [arch=armhf] http://pkg.bluehorizon.network/linux/raspbian jessie-updates main
 deb-src [arch=armhf] http://pkg.bluehorizon.network/linux/raspbian jessie-updates main
 EOF
+      fi
       apt-get update
-      apt-get install -y bluehorizon
+      apt-get install -o Dpkg::Options::="--force-confold" -y bluehorizon
     fi
 
     start=$(date +%s)

@@ -55,7 +55,7 @@ sed -i 's/#kernel.printk = 3 4 1 3/kernel.printk = 3 4 1 3/' /etc/sysctl.conf
 sed -i 's/^PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
 sed -i 's/^PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
 
-apt update && apt install -o Dpkg::Options::="--force-confold" -y htop iftop iotop jq screen bridge-utils rsyslog logrotate crda iw wireless-tools wpasupplicant wireless-regdb curl iptables gettext software-properties-common python-software-properties
+apt-get update && apt-get install -o Dpkg::Options::="--force-confold" -y htop iftop iotop jq screen bridge-utils rsyslog logrotate crda iw wireless-tools wpasupplicant wireless-regdb curl iptables gettext vnstat software-properties-common python-software-properties
 
 echo "$TMP_HOSTNAME" > /etc/hostname
 sed "/127.0.1.1/d" -i /etc/hosts
@@ -89,7 +89,7 @@ echo -e "fs.file-max = 110000\n" >> /etc/sysctl.conf
 sed -i 's,PermitRootLogin without-password,PermitRootLogin yes,g' /etc/ssh/sshd_config
 sed -i 's,X11Forwarding yes,X11Forwarding no,g' /etc/ssh/sshd_config
 
-apt -y purge nano
+apt-get -y purge nano
 
 update-rc.d apply_noobs_os_config remove
 update-rc.d resize2fs_once remove
@@ -107,7 +107,7 @@ rm /usr/sbin/policy-rc.d
 ln -s /dev/null /etc/udev/rules.d/80-net-setup-link.rules
 
 # create override dirs in /boot; TODO: add instructions in those dirs to help people use them
-mkdir -p /boot/horizon-cfg/etc/{horizon/,default/}
+mkdir -p /boot/horizon-cfg/etc/{horizon/,default/,apt/sources.list.d/}
 mkdir -p /boot/horizon-cfg/usr/horizon/bin
 
 # remove stuff that takes up space
