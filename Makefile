@@ -5,9 +5,9 @@ COMPILE_CLEAN ?= clean
 WORK_DIR ?= /mnt/extra/tmp/horizon-raspbian-image
 IMAGE_OUTPUT_DIR ?= /mnt/extra
 
-all: sd-image
+all: pi3-sd-image
 
-clean: clean-pi2 clean-pi3
+clean: clean-pi3
 
 clean-%:
 	-rm -rf $(IMAGE_OUTPUT_DIR)/horizon-raspbian-$*-*

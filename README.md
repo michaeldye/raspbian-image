@@ -27,4 +27,4 @@ Related Projects:
 
 #### Steps
 
-* Execute `make pi3-sd-image` to make an official, Pi3-only image or `make pi2-sd-image` to make a Pi2 image. The resulting image will be written to /mnt/extra. If you'd like to change the output location, execute `make pi3-sd-image IMAGE_OUTPUT_DIR=/tmp/`.
+* Execute `make pi3-sd-image` to make an official, Pi3 and Pi2 image. The resulting image will be written to /mnt/extra. If you'd like to change the output location, execute `make pi3-sd-image IMAGE_OUTPUT_DIR=/tmp/`.

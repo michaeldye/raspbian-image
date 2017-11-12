@@ -12,9 +12,8 @@ fi
 DT=$(date +%s)
 STAMP=$(echo $(date -d @${DT} +%F_%T) | awk -F ':' '{print $1""$2}')
 
-IMAGE="2017-04-10-raspbian-jessie-lite.img"
-URL="https://downloads.raspberrypi.org/raspbian_lite/images/raspbian_lite-2017-04-10/$(basename "$IMAGE" .img).zip"
-
+IMAGE="2017-09-07-raspbian-stretch-lite.img"
+URL="http://downloads.raspberrypi.org/raspbian_lite/images/raspbian_lite-2017-09-08/$(basename "$IMAGE" .img).zip"
 WORK_DIR=$2
 
 if ! [ -d "$WORK_DIR" ]; then
